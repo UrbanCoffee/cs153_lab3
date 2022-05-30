@@ -78,6 +78,16 @@ trap(struct trapframe *tf)
     lapiceoi();
     break;
 
+  case T_PGFLT:
+    if(tf->esp >= myproc()->stack_bot - PGSIZE && tf->esp < myproc()->stack_bot){
+      deallocuvm(myproc()->pgdir, myproc()->stack_bot -1 , myproc()->stack_bot- PGSIZE);
+      allocuvm(myproc()->pgdir, myproc()->stack_bot - 2*PGSIZE, myproc()->stack_bot-1);
+      myproc()->stack_bot -= PGSIZE;
+      clearpteu(myproc()->pgdir, (char*)(myproc()->stack_bot - PGSIZE));
+      cprintf("Stack size increased by 1.\n");
+      break;
+    }
+
   //PAGEBREAK: 13
   default:
     if(myproc() == 0 || (tf->cs&3) == 0){
